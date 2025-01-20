@@ -1,9 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('cookieModal');
+    const customModal = document.getElementById('customModal');
     const consentStatus = document.getElementById('consentStatus');
     const buyDrinkStatus = document.getElementById('buyDrinkStatus');
     const deviceInfoTable = document.getElementById('deviceInfoTable');
     const cookieTable = document.getElementById('cookieTable');
+    const dataCollected = document.getElementById('dataCollected');
 
     // Show modal on page load
     modal.style.display = 'block';
@@ -48,30 +50,66 @@ document.addEventListener('DOMContentLoaded', function () {
         return {
             ScreenWidth: window.screen.width,
             ScreenHeight: window.screen.height,
-            Browser: navigator.userAgent
+            Browser: navigator.userAgent,
+            Language: navigator.language,
+            Platform: navigator.platform,
         };
+    }
+
+    // Collect data based on enabled cookies
+    function collectData() {
+        const data = [];
+        if (getCookie('analytics') === 'enabled') {
+            data.push(`Screen Resolution: ${window.screen.width}x${window.screen.height}`);
+            data.push(`Browser: ${navigator.userAgent}`);
+            data.push(`Language: ${navigator.language}`);
+            data.push(`Platform: ${navigator.platform}`);
+        }
+        if (getCookie('marketing') === 'enabled') {
+            data.push('You agreed to "Buy the Devs a Drink!"');
+        }
+
+        dataCollected.innerHTML = '';
+        data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            dataCollected.appendChild(li);
+        });
     }
 
     // Button event handlers
     document.getElementById('acceptAll').addEventListener('click', () => {
         setCookie('consent', 'all', 1); // Store for 1 hour
-        setCookie('buyDrink', 'yes', 1); // Auto-set "Buy the Devs a Drink"
+        setCookie('analytics', 'enabled', 1); // Enable all data tracking
+        setCookie('marketing', 'enabled', 1); // Enable marketing cookies
         updateDashboard();
         modal.style.display = 'none';
     });
 
     document.getElementById('acceptNecessary').addEventListener('click', () => {
         setCookie('consent', 'necessary', 1);
-        setCookie('buyDrink', 'no', 1); // Auto-set "Buy the Devs a Drink"
+        setCookie('analytics', 'disabled', 1); // Disable analytics
+        setCookie('marketing', 'disabled', 1); // Disable marketing
         updateDashboard();
         modal.style.display = 'none';
     });
 
     document.getElementById('customSettings').addEventListener('click', () => {
-        setCookie('consent', 'custom', 1);
-        setCookie('buyDrink', 'yes', 1); // Auto-set "Buy the Devs a Drink"
-        updateDashboard();
         modal.style.display = 'none';
+        customModal.style.display = 'block';
+    });
+
+    document.getElementById('saveCustomSettings').addEventListener('click', () => {
+        const analyticsEnabled = document.getElementById('analyticsCookie').checked;
+        const marketingEnabled = document.getElementById('marketingCookie').checked;
+
+        // Set cookies based on user selection
+        setCookie('consent', 'custom', 1);
+        setCookie('analytics', analyticsEnabled ? 'enabled' : 'disabled', 1);
+        setCookie('marketing', marketingEnabled ? 'enabled' : 'disabled', 1);
+
+        updateDashboard();
+        customModal.style.display = 'none';
     });
 
     // Update the dashboard
@@ -81,12 +119,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Update consent status
         const consent = getCookie('consent') || 'Pending';
-        const buyDrink = getCookie('buyDrink') || 'Pending';
+        const buyDrink = getCookie('marketing') === 'enabled' ? 'Yes' : 'No';
+
         console.log("Consent Status:", consent); // Debugging
         console.log("Buy Drink Status:", buyDrink); // Debugging
 
         consentStatus.textContent = `Consent: ${consent}`;
         buyDrinkStatus.textContent = `Buy the Devs a Drink: ${buyDrink}`;
+        collectData();
 
         // Update device info
         const deviceData = getDeviceData();
@@ -98,10 +138,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Update all cookies
         const allCookies = getAllCookies();
-        console.log("Parsed Cookies:", allCookies); // Debugging
         cookieTable.innerHTML = '';
         allCookies.forEach(({ key, value }) => {
-            const row = `<tr><td>${key}</td><td>${value}</td></tr>`;
+            const row = `<tr><td>${key}</td><td>${key === 'analytics' ? 'Analytics' : key === 'marketing' ? 'Marketing' : 'Functional'}</td><td>${value}</td></tr>`;
             cookieTable.innerHTML += row;
         });
     }
@@ -109,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize the dashboard
     updateDashboard();
 });
+
 
 
 

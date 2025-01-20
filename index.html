@@ -16,6 +16,23 @@
         <button id="customSettings">Custom Settings</button>
     </div>
 
+    <!-- Custom Settings Modal -->
+    <div id="customModal" class="modal">
+        <h2>Customise Your Cookies</h2>
+        <p>Select which cookies you want to enable:</p>
+        <form id="customCookieForm">
+            <label>
+                <input type="checkbox" id="analyticsCookie"> Analytics Cookies 
+                <span>(Track screen size, browser, language, etc.)</span>
+            </label><br>
+            <label>
+                <input type="checkbox" id="marketingCookie"> Marketing Cookies 
+                <span>(Buy the Devs a Drink)</span>
+            </label><br>
+        </form>
+        <button id="saveCustomSettings">Save Settings</button>
+    </div>
+
     <!-- Dashboard -->
     <div id="dashboard">
         <h2>Live Data Dashboard</h2>
@@ -25,15 +42,38 @@
             <p id="buyDrinkStatus">Buy the Devs a Drink: Pending</p>
         </div>
         <div class="dashboard-section">
+            <h3>Collected Data</h3>
+            <ul id="dataCollected">
+                <!-- Dynamically populated with collected data -->
+            </ul>
+        </div>
+        <div class="dashboard-section">
             <h3>Device Information</h3>
             <table>
-                <tbody id="deviceInfoTable"></tbody>
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody id="deviceInfoTable">
+                    <!-- Dynamically populated -->
+                </tbody>
             </table>
         </div>
         <div class="dashboard-section">
             <h3>All Stored Cookies</h3>
             <table>
-                <tbody id="cookieTable"></tbody>
+                <thead>
+                    <tr>
+                        <th>Cookie Name</th>
+                        <th>Purpose</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody id="cookieTable">
+                    <!-- Dynamically populated -->
+                </tbody>
             </table>
         </div>
     </div>
@@ -41,5 +81,6 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
