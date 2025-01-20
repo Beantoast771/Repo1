@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Consent Demo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Cookie Consent Modal -->
+    <div id="cookieModal" class="modal">
+        <h2>Cookie Consent</h2>
+        <p>We use cookies to improve your experience. Please select your preferences:</p>
+        <button id="acceptAll">Accept All</button>
+        <button id="acceptNecessary">Accept Necessary</button>
+        <button id="customSettings">Custom Settings</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard">
+        <h2>Live Data Dashboard</h2>
+        <div class="dashboard-section">
+            <h3>Consent Status</h3>
+            <p id="consentStatus">Consent: Pending</p>
+            <p id="buyDrinkStatus">Buy the Devs a Drink: Pending</p>
+        </div>
+        <div class="dashboard-section">
+            <h3>Device Information</h3>
+            <table>
+                <tbody id="deviceInfoTable"></tbody>
+            </table>
+        </div>
+        <div class="dashboard-section">
+            <h3>All Stored Cookies</h3>
+            <table>
+                <tbody id="cookieTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
