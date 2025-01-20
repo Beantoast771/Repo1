@@ -7,8 +7,58 @@ document.addEventListener('DOMContentLoaded', function () {
     const cookieTable = document.getElementById('cookieTable');
     const dataCollected = document.getElementById('dataCollected');
 
+    // User activity tracking
+    const userSessionData = {
+        clicks: 0,
+        mouseMoves: 0,
+        timeSpent: 0,
+        geolocation: null,
+        referrer: document.referrer || "Direct Access",
+        connectionType: navigator.connection ? navigator.connection.effectiveType : "Unknown",
+    };
+
+    let mapInstance = null; // Store Leaflet map instance
+
     // Show modal on page load
     modal.style.display = 'block';
+
+    // Increment clicks
+    document.addEventListener('click', () => {
+        userSessionData.clicks += 1;
+    });
+
+    // Track mouse movement
+    document.addEventListener('mousemove', () => {
+        userSessionData.mouseMoves += 1;
+    });
+
+    // Track time spent on page
+    setInterval(() => {
+        userSessionData.timeSpent += 1; // Increment every second
+    }, 1000);
+
+    // Refresh mouse clicks and movements every 10 seconds
+    setInterval(() => {
+        collectData();
+        updateDashboard();
+    }, 10000);
+
+    // Gather geolocation
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                userSessionData.geolocation = `${position.coords.latitude}, ${position.coords.longitude}`;
+                initializeMap(position.coords.latitude, position.coords.longitude);
+                updateDashboard(); // Refresh dashboard when geolocation is available
+            },
+            (error) => {
+                userSessionData.geolocation = "Permission Denied";
+                updateDashboard(); // Refresh dashboard if denied
+            }
+        );
+    } else {
+        userSessionData.geolocation = "Not Supported";
+    }
 
     // Utility function to set a cookie
     function setCookie(name, value, hours) {
@@ -16,7 +66,6 @@ document.addEventListener('DOMContentLoaded', function () {
         d.setTime(d.getTime() + (hours * 60 * 60 * 1000)); // Convert hours to milliseconds
         const expires = "expires=" + d.toUTCString();
         document.cookie = `${name}=${value}; ${expires}; path=/; SameSite=Lax`;
-        console.log(`Cookie set: ${name}=${value}; ${expires}`); // Debugging
     }
 
     // Utility function to get a cookie
@@ -56,19 +105,27 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    // Collect data based on enabled cookies
-    function collectData() {
-        const data = [];
-        if (getCookie('analytics') === 'enabled') {
-            data.push(`Screen Resolution: ${window.screen.width}x${window.screen.height}`);
-            data.push(`Browser: ${navigator.userAgent}`);
-            data.push(`Language: ${navigator.language}`);
-            data.push(`Platform: ${navigator.platform}`);
+    // Initialize Leaflet map
+    function initializeMap(lat, lng) {
+        if (!mapInstance) {
+            mapInstance = L.map('map').setView([lat, lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(mapInstance);
         }
-        if (getCookie('marketing') === 'enabled') {
-            data.push('You agreed to "Buy the Devs a Drink!"');
-        }
+        L.marker([lat, lng]).addTo(mapInstance).bindPopup('Your Location').openPopup();
+    }
 
+    // Collect data and display in dashboard
+    function collectData() {
+        const data = [
+            `Clicks: ${userSessionData.clicks}`,
+            `Mouse Movements: ${userSessionData.mouseMoves}`,
+            `Time Spent (seconds): ${userSessionData.timeSpent}`,
+            `Referrer: ${userSessionData.referrer}`,
+            `Connection Type: ${userSessionData.connectionType}`,
+            `Geolocation: ${userSessionData.geolocation || "Loading..."}`,
+        ];
         dataCollected.innerHTML = '';
         data.forEach(item => {
             const li = document.createElement('li');
@@ -77,58 +134,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Button event handlers
-    document.getElementById('acceptAll').addEventListener('click', () => {
-        setCookie('consent', 'all', 1); // Store for 1 hour
-        setCookie('analytics', 'enabled', 1); // Enable all data tracking
-        setCookie('marketing', 'enabled', 1); // Enable marketing cookies
-        updateDashboard();
-        modal.style.display = 'none';
-    });
-
-    document.getElementById('acceptNecessary').addEventListener('click', () => {
-        setCookie('consent', 'necessary', 1);
-        setCookie('analytics', 'disabled', 1); // Disable analytics
-        setCookie('marketing', 'disabled', 1); // Disable marketing
-        updateDashboard();
-        modal.style.display = 'none';
-    });
-
-    document.getElementById('customSettings').addEventListener('click', () => {
-        modal.style.display = 'none';
-        customModal.style.display = 'block';
-    });
-
-    document.getElementById('saveCustomSettings').addEventListener('click', () => {
-        const analyticsEnabled = document.getElementById('analyticsCookie').checked;
-        const marketingEnabled = document.getElementById('marketingCookie').checked;
-
-        // Set cookies based on user selection
-        setCookie('consent', 'custom', 1);
-        setCookie('analytics', analyticsEnabled ? 'enabled' : 'disabled', 1);
-        setCookie('marketing', marketingEnabled ? 'enabled' : 'disabled', 1);
-
-        updateDashboard();
-        customModal.style.display = 'none';
-    });
-
-    // Update the dashboard
+    // Update dashboard
     function updateDashboard() {
-        // Debugging: Log all cookies
-        console.log("All Cookies:", document.cookie);
-
-        // Update consent status
         const consent = getCookie('consent') || 'Pending';
         const buyDrink = getCookie('marketing') === 'enabled' ? 'Yes' : 'No';
-
-        console.log("Consent Status:", consent); // Debugging
-        console.log("Buy Drink Status:", buyDrink); // Debugging
 
         consentStatus.textContent = `Consent: ${consent}`;
         buyDrinkStatus.textContent = `Buy the Devs a Drink: ${buyDrink}`;
         collectData();
 
-        // Update device info
         const deviceData = getDeviceData();
         deviceInfoTable.innerHTML = '';
         for (const [key, value] of Object.entries(deviceData)) {
@@ -136,7 +150,6 @@ document.addEventListener('DOMContentLoaded', function () {
             deviceInfoTable.innerHTML += row;
         }
 
-        // Update all cookies
         const allCookies = getAllCookies();
         cookieTable.innerHTML = '';
         allCookies.forEach(({ key, value }) => {
@@ -145,9 +158,50 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Accept All Cookies
+    document.getElementById('acceptAll').addEventListener('click', () => {
+        setCookie('consent', 'all', 1);
+        setCookie('analytics', 'enabled', 1);
+        setCookie('marketing', 'enabled', 1);
+        modal.style.display = 'none';
+        updateDashboard();
+    });
+
+    // Accept Necessary Cookies
+    document.getElementById('acceptNecessary').addEventListener('click', () => {
+        setCookie('consent', 'necessary', 1);
+        setCookie('analytics', 'disabled', 1);
+        setCookie('marketing', 'disabled', 1);
+        modal.style.display = 'none';
+        updateDashboard();
+    });
+
+    // Custom Settings
+    document.getElementById('customSettings').addEventListener('click', () => {
+        modal.style.display = 'none';
+        customModal.style.display = 'block';
+    });
+
+    // Save Custom Settings
+    document.getElementById('saveCustomSettings').addEventListener('click', () => {
+        const analyticsEnabled = document.getElementById('analyticsCookie').checked;
+        const marketingEnabled = document.getElementById('marketingCookie').checked;
+
+        setCookie('consent', 'custom', 1);
+        setCookie('analytics', analyticsEnabled ? 'enabled' : 'disabled', 1);
+        setCookie('marketing', marketingEnabled ? 'enabled' : 'disabled', 1);
+
+        customModal.style.display = 'none';
+        updateDashboard();
+    });
+
     // Initialize the dashboard
     updateDashboard();
 });
+
+
+
+
 
 
 
