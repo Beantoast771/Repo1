@@ -1,92 +1,95 @@
+// Wait for the DOM to fully load before running the script
 document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('cookieModal');
-    const customModal = document.getElementById('customModal');
-    const consentStatus = document.getElementById('consentStatus');
-    const buyDrinkStatus = document.getElementById('buyDrinkStatus');
-    const deviceInfoTable = document.getElementById('deviceInfoTable');
-    const cookieTable = document.getElementById('cookieTable');
-    const dataCollected = document.getElementById('dataCollected');
+    // Get references to key DOM elements
+    const modal = document.getElementById('cookieModal'); // Cookie consent modal
+    const customModal = document.getElementById('customModal'); // Custom settings modal
+    const consentStatus = document.getElementById('consentStatus'); // Consent status display
+    const buyDrinkStatus = document.getElementById('buyDrinkStatus'); // "Buy the Devs a Drink" status
+    const deviceInfoTable = document.getElementById('deviceInfoTable'); // Table for device data
+    const cookieTable = document.getElementById('cookieTable'); // Table for stored cookies
+    const dataCollected = document.getElementById('dataCollected'); // List for collected data (clicks, movements, etc.)
 
-    // User activity tracking
+    // Object to track user activity
     const userSessionData = {
-        clicks: 0,
-        mouseMoves: 0,
-        timeSpent: 0,
-        geolocation: null,
-        referrer: document.referrer || "Direct Access",
-        connectionType: navigator.connection ? navigator.connection.effectiveType : "Unknown",
+        clicks: 0, // Number of clicks
+        mouseMoves: 0, // Number of mouse movements
+        timeSpent: 0, // Time spent on the page (in seconds)
+        geolocation: null, // User's geolocation (latitude and longitude)
+        referrer: document.referrer || "Direct Access", // Referrer URL or "Direct Access"
+        connectionType: navigator.connection ? navigator.connection.effectiveType : "Unknown", // Connection type (e.g., Wi-Fi, 4G)
     };
 
-    let mapInstance = null; // Store Leaflet map instance
+    let mapInstance = null; // Variable to store the Leaflet map instance
 
-    // Show modal on page load
+    // Show the cookie consent modal on page load
     modal.style.display = 'block';
 
-    // Increment clicks
+    // Track clicks on the page
     document.addEventListener('click', () => {
-        userSessionData.clicks += 1;
+        userSessionData.clicks += 1; // Increment the click count
     });
 
-    // Track mouse movement
+    // Track mouse movements
     document.addEventListener('mousemove', () => {
-        userSessionData.mouseMoves += 1;
+        userSessionData.mouseMoves += 1; // Increment the mouse movement count
     });
 
-    // Track time spent on page
+    // Track time spent on the page (updates every second)
     setInterval(() => {
-        userSessionData.timeSpent += 1; // Increment every second
+        userSessionData.timeSpent += 1;
     }, 1000);
 
-    // Refresh mouse clicks and movements every 10 seconds
+    // Periodically update the dashboard every 10 seconds
     setInterval(() => {
-        collectData();
-        updateDashboard();
+        collectData(); // Update collected data
+        updateDashboard(); // Refresh dashboard
     }, 10000);
 
-    // Gather geolocation
+    // Try to get the user's geolocation
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
+                // If successful, store latitude and longitude
                 userSessionData.geolocation = `${position.coords.latitude}, ${position.coords.longitude}`;
-                initializeMap(position.coords.latitude, position.coords.longitude);
-                updateDashboard(); // Refresh dashboard when geolocation is available
+                initializeMap(position.coords.latitude, position.coords.longitude); // Show location on map
+                updateDashboard(); // Refresh dashboard
             },
             (error) => {
-                userSessionData.geolocation = "Permission Denied";
-                updateDashboard(); // Refresh dashboard if denied
+                userSessionData.geolocation = "Permission Denied"; // Handle denied permission
+                updateDashboard();
             }
         );
     } else {
-        userSessionData.geolocation = "Not Supported";
+        userSessionData.geolocation = "Not Supported"; // Geolocation not supported
     }
 
-    // Utility function to set a cookie
+    // Function to set a cookie with a name, value, and expiry time in hours
     function setCookie(name, value, hours) {
         const d = new Date();
         d.setTime(d.getTime() + (hours * 60 * 60 * 1000)); // Convert hours to milliseconds
-        const expires = "expires=" + d.toUTCString();
-        document.cookie = `${name}=${value}; ${expires}; path=/; SameSite=Lax`;
+        const expires = "expires=" + d.toUTCString(); // Format expiration date
+        document.cookie = `${name}=${value}; ${expires}; path=/; SameSite=Lax`; // Set cookie
     }
 
-    // Utility function to get a cookie
+    // Function to retrieve a specific cookie by name
     function getCookie(name) {
         const nameEQ = name + "=";
-        const cookies = document.cookie.split(';');
+        const cookies = document.cookie.split(';'); // Split all cookies into an array
         for (let cookie of cookies) {
             cookie = cookie.trim(); // Remove leading spaces
             if (cookie.startsWith(nameEQ)) {
-                return cookie.substring(nameEQ.length);
+                return cookie.substring(nameEQ.length); // Return the cookie value
             }
         }
-        return null;
+        return null; // Return null if not found
     }
 
-    // Utility function to get all cookies
+    // Function to get all cookies as key-value pairs
     function getAllCookies() {
-        const cookies = document.cookie.split(';');
+        const cookies = document.cookie.split(';'); // Split cookies
         const cookieData = [];
         for (let cookie of cookies) {
-            const [key, value] = cookie.trim().split('=');
+            const [key, value] = cookie.trim().split('='); // Split each cookie into key and value
             if (key && value !== undefined) {
                 cookieData.push({ key, value });
             }
@@ -94,38 +97,40 @@ document.addEventListener('DOMContentLoaded', function () {
         return cookieData;
     }
 
-    // Gather device data
+    // Function to get device information
     function getDeviceData() {
         return {
-            ScreenWidth: window.screen.width,
-            ScreenHeight: window.screen.height,
-            Browser: navigator.userAgent,
-            Language: navigator.language,
-            Platform: navigator.platform,
+            ScreenWidth: window.screen.width, // Screen width in pixels
+            ScreenHeight: window.screen.height, // Screen height in pixels
+            Browser: navigator.userAgent, // User agent string (browser and OS details)
+            Language: navigator.language, // Preferred language of the browser
+            Platform: navigator.platform, // Platform (e.g., Windows, Mac)
         };
     }
 
-    // Initialize Leaflet map
+    // Function to initialize the Leaflet map
     function initializeMap(lat, lng) {
         if (!mapInstance) {
-            mapInstance = L.map('map').setView([lat, lng], 13);
+            mapInstance = L.map('map').setView([lat, lng], 13); // Set initial map view
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(mapInstance);
         }
+        // Add a marker at the user's location
         L.marker([lat, lng]).addTo(mapInstance).bindPopup('Your Location').openPopup();
     }
 
-    // Collect data and display in dashboard
+    // Function to collect and display user activity data
     function collectData() {
         const data = [
-            `Clicks: ${userSessionData.clicks}`,
-            `Mouse Movements: ${userSessionData.mouseMoves}`,
-            `Time Spent (seconds): ${userSessionData.timeSpent}`,
-            `Referrer: ${userSessionData.referrer}`,
-            `Connection Type: ${userSessionData.connectionType}`,
-            `Geolocation: ${userSessionData.geolocation || "Loading..."}`,
+            `Clicks: ${userSessionData.clicks}`, // Number of clicks
+            `Mouse Movements: ${userSessionData.mouseMoves}`, // Number of mouse movements
+            `Time Spent (seconds): ${userSessionData.timeSpent}`, // Time spent on page
+            `Referrer: ${userSessionData.referrer}`, // Referrer URL
+            `Connection Type: ${userSessionData.connectionType}`, // Connection type
+            `Geolocation: ${userSessionData.geolocation || "Loading..."}`, // Geolocation or loading message
         ];
+        // Populate the list with collected data
         dataCollected.innerHTML = '';
         data.forEach(item => {
             const li = document.createElement('li');
@@ -134,15 +139,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Update dashboard
+    // Function to update the dashboard with all data
     function updateDashboard() {
-        const consent = getCookie('consent') || 'Pending';
-        const buyDrink = getCookie('marketing') === 'enabled' ? 'Yes' : 'No';
+        const consent = getCookie('consent') || 'Pending'; // Get consent status
+        const buyDrink = getCookie('marketing') === 'enabled' ? 'Yes' : 'No'; // Get marketing status
 
+        // Update the consent and "Buy the Devs a Drink" status
         consentStatus.textContent = `Consent: ${consent}`;
         buyDrinkStatus.textContent = `Buy the Devs a Drink: ${buyDrink}`;
         collectData();
 
+        // Display device information in a table
         const deviceData = getDeviceData();
         deviceInfoTable.innerHTML = '';
         for (const [key, value] of Object.entries(deviceData)) {
@@ -150,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
             deviceInfoTable.innerHTML += row;
         }
 
+        // Display all cookies in a table
         const allCookies = getAllCookies();
         cookieTable.innerHTML = '';
         allCookies.forEach(({ key, value }) => {
@@ -158,7 +166,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Accept All Cookies
+    // Function to clear all cookies and refresh the page
+    function clearAllCookies() {
+        const cookies = document.cookie.split(';'); // Split all cookies
+        cookies.forEach(cookie => {
+            const name = cookie.split('=')[0].trim(); // Extract cookie name
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`; // Expire the cookie
+        });
+        alert('All cookies have been cleared. Refreshing the page...'); // Notify the user
+        location.reload(); // Refresh the page
+    }
+
+    // Event listener for "Accept All" button
     document.getElementById('acceptAll').addEventListener('click', () => {
         setCookie('consent', 'all', 1);
         setCookie('analytics', 'enabled', 1);
@@ -167,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateDashboard();
     });
 
-    // Accept Necessary Cookies
+    // Event listener for "Accept Necessary" button
     document.getElementById('acceptNecessary').addEventListener('click', () => {
         setCookie('consent', 'necessary', 1);
         setCookie('analytics', 'disabled', 1);
@@ -176,13 +195,13 @@ document.addEventListener('DOMContentLoaded', function () {
         updateDashboard();
     });
 
-    // Custom Settings
+    // Event listener for "Custom Settings" button
     document.getElementById('customSettings').addEventListener('click', () => {
         modal.style.display = 'none';
         customModal.style.display = 'block';
     });
 
-    // Save Custom Settings
+    // Event listener for "Save Custom Settings" button
     document.getElementById('saveCustomSettings').addEventListener('click', () => {
         const analyticsEnabled = document.getElementById('analyticsCookie').checked;
         const marketingEnabled = document.getElementById('marketingCookie').checked;
@@ -195,9 +214,14 @@ document.addEventListener('DOMContentLoaded', function () {
         updateDashboard();
     });
 
-    // Initialize the dashboard
+    // Event listener for "Clear Cookies" button
+    document.getElementById('clearCookies').addEventListener('click', clearAllCookies);
+
+    // Initialize the dashboard on page load
     updateDashboard();
 });
+
+
 
 
 

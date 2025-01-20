@@ -1,92 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Consent Demo</title>
+    <!-- Metadata for the document -->
+    <meta charset="UTF-8"> <!-- Sets character encoding for the document -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Ensures responsive layout on mobile devices -->
+    <title>Cookie Consent Demo</title> <!-- Title of the page -->
+    
+    <!-- Stylesheet for custom styles -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- Leaflet.js library styles for the map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script> <!-- Leaflet.js Library -->
+
+    <!-- Leaflet.js library for interactive maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <!-- Cookie Consent Modal -->
     <div id="cookieModal" class="modal">
+        <!-- Title for the modal -->
         <h2>Cookie Consent</h2>
+        <!-- Brief description about cookie usage -->
         <p>We use cookies to improve your experience. Please select your preferences:</p>
-        <button id="acceptAll">Accept All</button>
-        <button id="acceptNecessary">Accept Necessary</button>
-        <button id="customSettings">Custom Settings</button>
+        <!-- Buttons for cookie options -->
+        <button id="acceptAll">Accept All</button> <!-- Accept all cookies -->
+        <button id="acceptNecessary">Accept Necessary</button> <!-- Accept only necessary cookies -->
+        <button id="customSettings">Custom Settings</button> <!-- Open custom settings -->
     </div>
 
     <!-- Custom Settings Modal -->
     <div id="customModal" class="modal">
+        <!-- Title for the modal -->
         <h2>Customise Your Cookies</h2>
+        <!-- Instructions for selecting cookie options -->
         <p>Select which cookies you want to enable:</p>
+        <!-- Form to select individual cookie options -->
         <form id="customCookieForm">
+            <!-- Checkbox for enabling analytics cookies -->
             <label>
                 <input type="checkbox" id="analyticsCookie"> Analytics Cookies 
                 <span>(Track screen size, browser, language, etc.)</span>
             </label><br>
+            <!-- Checkbox for enabling marketing cookies -->
             <label>
                 <input type="checkbox" id="marketingCookie"> Marketing Cookies 
                 <span>(Buy the Devs a Drink)</span>
             </label><br>
         </form>
+        <!-- Button to save custom cookie settings -->
         <button id="saveCustomSettings">Save Settings</button>
     </div>
 
     <!-- Dashboard -->
     <div id="dashboard">
+        <!-- Title of the dashboard -->
         <h2>Live Data Dashboard</h2>
+
+        <!-- Section for displaying consent status -->
         <div class="dashboard-section">
             <h3>Consent Status</h3>
+            <!-- Placeholder for consent status -->
             <p id="consentStatus">Consent: Pending</p>
+            <!-- Placeholder for marketing cookie status -->
             <p id="buyDrinkStatus">Buy the Devs a Drink: Pending</p>
         </div>
+
+        <!-- Section for displaying collected data -->
         <div class="dashboard-section">
             <h3>Collected Data</h3>
-            <ul id="dataCollected">
-                <!-- Dynamically populated with collected data -->
-            </ul>
+            <!-- List to dynamically display data like clicks, mouse movements, etc. -->
+            <ul id="dataCollected"></ul>
         </div>
+
+        <!-- Section for displaying device information -->
         <div class="dashboard-section">
             <h3>Device Information</h3>
+            <!-- Table to display key-value pairs of device data -->
             <table>
                 <thead>
                     <tr>
-                        <th>Key</th>
-                        <th>Value</th>
+                        <th>Key</th> <!-- Column for data keys -->
+                        <th>Value</th> <!-- Column for data values -->
                     </tr>
                 </thead>
-                <tbody id="deviceInfoTable">
-                    <!-- Dynamically populated -->
-                </tbody>
+                <tbody id="deviceInfoTable"></tbody> <!-- Placeholder for dynamic content -->
             </table>
         </div>
+
+        <!-- Section for displaying all stored cookies -->
         <div class="dashboard-section">
             <h3>All Stored Cookies</h3>
+            <!-- Table to display cookie names, purposes, and values -->
             <table>
                 <thead>
                     <tr>
-                        <th>Cookie Name</th>
-                        <th>Purpose</th>
-                        <th>Value</th>
+                        <th>Cookie Name</th> <!-- Column for cookie names -->
+                        <th>Purpose</th> <!-- Column for cookie purposes -->
+                        <th>Value</th> <!-- Column for cookie values -->
                     </tr>
                 </thead>
-                <tbody id="cookieTable">
-                    <!-- Dynamically populated -->
-                </tbody>
+                <tbody id="cookieTable"></tbody> <!-- Placeholder for dynamic content -->
             </table>
         </div>
+
+        <!-- Section for displaying user's geolocation on a map -->
         <div class="dashboard-section">
             <h3>Your Location</h3>
-            <div id="map" style="width: 100%; height: 400px;"></div> <!-- Map Placeholder -->
+            <!-- Map container where the Leaflet.js map will be rendered -->
+            <div id="map" style="width: 100%; height: 400px;"></div>
+        </div>
+
+        <!-- Section for resetting cookies -->
+        <div class="dashboard-section">
+            <h3>Reset</h3>
+            <!-- Button to clear all cookies and restart the session -->
+            <button id="clearCookies">Clear Cookies and Restart</button>
         </div>
     </div>
 
+    <!-- Link to the JavaScript file -->
     <script src="script.js"></script>
 </body>
 </html>
+
+
 
 
 
